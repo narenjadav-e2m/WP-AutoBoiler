@@ -420,7 +420,7 @@ hr {
 
 ul,
 ol {
-  margin: 0 0 1.5em 3em; }
+  margin: 0 3em 1.5em 0; }
 
 ul {
   list-style: disc; }
@@ -431,7 +431,7 @@ ol {
 li > ul,
 li > ol {
   margin-bottom: 0;
-  margin-left: 1.5em; }
+  margin-right: 1.5em; }
 
 dt {
   font-weight: 700; }
@@ -555,26 +555,26 @@ textarea {
     display: none;
     list-style: none;
     margin: 0;
-    padding-left: 0; }
+    padding-right: 0; }
     .main-navigation ul ul {
       box-shadow: 0 3px 3px rgba(0, 0, 0, 0.2);
-      float: left;
+      float: right;
       position: absolute;
       top: 100%;
-      left: -999em;
+      right: -999em;
       z-index: 99999; }
       .main-navigation ul ul ul {
-        left: -999em;
+        right: -999em;
         top: 0; }
       .main-navigation ul ul li:hover > ul,
       .main-navigation ul ul li.focus > ul {
         display: block;
-        left: auto; }
+        right: auto; }
       .main-navigation ul ul a {
         width: 200px; }
     .main-navigation ul li:hover > ul,
     .main-navigation ul li.focus > ul {
-      left: auto; }
+      right: auto; }
   .main-navigation li {
     position: relative; }
   .main-navigation a {
@@ -670,8 +670,8 @@ textarea {
   max-width: 100%; }
   .wp-caption img[class*="wp-image-"] {
     display: block;
-    margin-left: auto;
-    margin-right: auto; }
+    margin-right: auto;
+    margin-left: auto; }
   .wp-caption .wp-caption-text {
     margin: 0.8075em 0; }
 
@@ -759,7 +759,7 @@ textarea {
     font-size: 0.875rem;
     font-weight: 700;
     height: auto;
-    left: 5px;
+    right: 5px;
     line-height: normal;
     padding: 15px 23px 14px;
     text-decoration: none;
@@ -774,22 +774,18 @@ textarea {
 /* Alignments
 --------------------------------------------- */
 .alignleft {
-  /*rtl:ignore*/
   float: left;
-  /*rtl:ignore*/
   margin-right: 1.5em;
   margin-bottom: 1.5em; }
 
 .alignright {
-  /*rtl:ignore*/
   float: right;
-  /*rtl:ignore*/
   margin-left: 1.5em;
   margin-bottom: 1.5em; }
 
 .aligncenter {
   clear: both;
   display: block;
-  margin-left: auto;
   margin-right: auto;
+  margin-left: auto;
   margin-bottom: 1.5em; }
