@@ -13,7 +13,7 @@ jobs:
 
     - name: Zip entire repo
       run: |
-        zip -r repo.zip . -x "*.git*" 
+        zip -r repo.zip . -x "*.git*"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
