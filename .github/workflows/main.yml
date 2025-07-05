@@ -10,30 +10,32 @@ on:
 jobs:
   download-zip:
     runs-on: ubuntu-latest
-    outputs:
-      artifact_url: ${{ steps.set-output.outputs.artifact_url }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Zip entire repo
-      run: zip -r repo.zip . -x "*.git*"
+      - name: Zip entire repo
+        run: zip -r repo.zip . -x "*.git*"
 
-    - name: Upload artifact
-      id: upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: repo-package
-        path: repo.zip
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-package
+          path: repo.zip
 
-    - name: Get artifact URL
-      id: set-output
-      run: |
-        echo "artifact_url=https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" >> $GITHUB_OUTPUT
+      - name: Get artifact ID + output download URL
+        id: set-output
+        run: |
+          artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
+            | jq '.artifacts[0].id')
 
-    - name: Call N8N resume URL
-      run: |
-        curl -X POST "${{ inputs.resumeUrl }}" \
-          -H "Content-Type: application/json" \
-          -d "{\"message\": \"Build completed\", \"artifact_url\": \"https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts\"}"
+          echo "artifact_zip_url=https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" >> $GITHUB_OUTPUT
+
+      - name: Call N8N resume URL
+        run: |
+          curl -X POST "${{ inputs.resumeUrl }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\": \"Build completed\", \"artifact_zip_url\": \"${{ steps.set-output.outputs.artifact_zip_url }}\"}"
