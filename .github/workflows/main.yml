@@ -1,7 +1,7 @@
 name: Download Repo as Zip + Upload Artifact
 
 on:
-  repository_dispatch:
+  workflow_dispatch:
     types: [n8n-trigger]
 
 jobs:
