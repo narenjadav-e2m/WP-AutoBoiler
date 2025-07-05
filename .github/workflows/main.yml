@@ -1,0 +1,33 @@
+name: Gulp Build + Zip + GitHub Artifact
+
+on:
+  repository_dispatch:
+    types: [n8n-trigger]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run gulp
+      run: npx gulp
+
+    - name: Zip dist folder
+      run: zip -r dist.zip dist/
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-package
+        path: dist.zip
