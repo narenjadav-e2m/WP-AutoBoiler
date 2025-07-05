@@ -10,6 +10,8 @@ on:
 jobs:
   download-zip:
     runs-on: ubuntu-latest
+    outputs:
+      artifact_url: ${{ steps.set-output.outputs.artifact_url }}
 
     steps:
     - name: Checkout code
@@ -19,13 +21,19 @@ jobs:
       run: zip -r repo.zip . -x "*.git*"
 
     - name: Upload artifact
+      id: upload
       uses: actions/upload-artifact@v4
       with:
         name: repo-package
         path: repo.zip
 
+    - name: Get artifact URL
+      id: set-output
+      run: |
+        echo "artifact_url=https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" >> $GITHUB_OUTPUT
+
     - name: Call N8N resume URL
       run: |
-        curl -X POST ${{ inputs.resumeUrl }} \
+        curl -X POST "${{ inputs.resumeUrl }}" \
           -H "Content-Type: application/json" \
-          -d '{"message": "Build completed", "artifact": "repo-package"}'
+          -d "{\"message\": \"Build completed\", \"artifact_url\": \"https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts\"}"
