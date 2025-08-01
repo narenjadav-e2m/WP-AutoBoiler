@@ -19,8 +19,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Zip entire repo
-        run: zip -r ${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
+      - name: Prepare folder for zipping
+        run: |
+          mkdir ${{ github.event.inputs.artifact_name }}
+          shopt -s dotglob
+          cp -r * ${{ github.event.inputs.artifact_name }}
+
+      - name: Zip entire repo inside root folder
+        run: zip -r ${{ github.event.inputs.artifact_name }}.zip ${{ github.event.inputs.artifact_name }}
 
       - name: Upload artifact
         id: upload
@@ -28,6 +34,16 @@ jobs:
         with:
           name: build
           path: ${{ github.event.inputs.artifact_name }}.zip
+
+      # - name: Zip entire repo
+      #   run: zip -r ${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
+
+      # - name: Upload artifact
+      #   id: upload
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build
+      #     path: ${{ github.event.inputs.artifact_name }}.zip
 
       - name: Get artifact ID + output download URL
         id: set-output
