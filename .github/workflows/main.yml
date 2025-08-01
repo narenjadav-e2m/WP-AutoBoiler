@@ -29,7 +29,7 @@ jobs:
             fi
           done
 
-      - name: Zip entire repo inside root folder
+      - name: Zip theme folder (correct structure for WP)
         run: zip -r ${{ github.event.inputs.artifact_name }}.zip ${{ github.event.inputs.artifact_name }}
 
       - name: Upload artifact
