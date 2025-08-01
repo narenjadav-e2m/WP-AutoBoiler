@@ -19,36 +19,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Prepare theme folder
-        run: |
-          mkdir ${{ github.event.inputs.artifact_name }}
-          shopt -s dotglob
-          for item in *; do
-            if [ "$item" != "${{ github.event.inputs.artifact_name }}" ]; then
-              cp -r "$item" "${{ github.event.inputs.artifact_name }}/"
-            fi
-          done
-
       - name: Create WordPress-ready theme ZIP
-        run: zip -r ${{ github.event.inputs.artifact_name }}.zip ${{ github.event.inputs.artifact_name }}
+        run: |
+          # Create a temporary directory
+          mkdir -p /tmp/theme-build
+          
+          # Copy all files to the temporary directory
+          shopt -s dotglob
+          cp -r * /tmp/theme-build/ 2>/dev/null || true
+          
+          # Remove any .git directories and GitHub-specific files
+          find /tmp/theme-build -name ".git*" -exec rm -rf {} + 2>/dev/null || true
+          find /tmp/theme-build -name ".github" -exec rm -rf {} + 2>/dev/null || true
+          
+          # Create the ZIP file with files at the root level
+          cd /tmp/theme-build
+          zip -r ${{ github.workspace }}/${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
 
-      - name: Upload artifact
+      - name: Upload artifact (uncompressed)
         id: upload
         uses: actions/upload-artifact@v4
         with:
           name: build
           path: ${{ github.event.inputs.artifact_name }}.zip
-
-
-      # - name: Zip entire repo
-      #   run: zip -r ${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
-
-      # - name: Upload artifact
-      #   id: upload
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: build
-      #     path: ${{ github.event.inputs.artifact_name }}.zip
+          compression-level: 0  # Disable compression to avoid double-zipping
 
       - name: Get artifact ID + output download URL
         id: set-output
