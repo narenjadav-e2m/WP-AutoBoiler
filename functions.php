@@ -22,3 +22,4 @@ require_once THEME_DIR . '/inc/login-customizer.php';
 require_once THEME_DIR . '/inc/post-types.php';
 require_once THEME_DIR . '/inc/template-tags.php';
 require_once THEME_DIR . '/inc/template-functions.php';
+require_once THEME_DIR . '/inc/disable-comments.php';
