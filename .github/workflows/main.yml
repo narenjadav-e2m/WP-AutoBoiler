@@ -19,15 +19,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Prepare theme folder
+        run: |
+          THEME_FOLDER="${{ github.event.inputs.artifact_name }}"
+          rm -rf "$THEME_FOLDER"
+          mkdir "$THEME_FOLDER"
+          
+          # Copy all repo files except .git, .github and workflow YAMLs into the theme folder
+          shopt -s dotglob
+          for item in *; do
+            if [[ "$item" != "$THEME_FOLDER" && "$item" != ".git" && "$item" != ".github" && "$item" != "*.yml" && "$item" != "*.yaml" ]]; then
+              cp -r "$item" "$THEME_FOLDER/"
+            fi
+          done
+
       - name: Create WordPress-ready theme ZIP
         run: |
-          # Zip all files in the current directory (theme root)
-          zip -r ${{ github.event.inputs.artifact_name }}.zip . \
-            -x "*.git*" \
-            -x ".github/*" \
-            -x "*.yml" \
-            -x "*.md" \
-            -x ".gitignore"
+          THEME_FOLDER="${{ github.event.inputs.artifact_name }}"
+          zip -r "${THEME_FOLDER}.zip" "$THEME_FOLDER"
 
       - name: Upload artifact
         id: upload
@@ -40,13 +49,10 @@ jobs:
       - name: Get artifact ID + output download URL
         id: set-output
         run: |
-          # Wait a moment for the artifact to be registered
           sleep 5
-          
           artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
-            | jq '.artifacts[0].id')
-
+            | jq '.artifacts.id')
           echo "artifact_zip_url=https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" >> $GITHUB_OUTPUT
 
       - name: Call N8N resume URL
