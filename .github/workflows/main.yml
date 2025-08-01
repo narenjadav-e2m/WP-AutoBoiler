@@ -1,4 +1,4 @@
-name: Download Repo as Zip + Upload Artifact
+name: Build WordPress Theme Zip
 
 on:
   workflow_dispatch:
@@ -12,37 +12,30 @@ on:
         default: 'wp-autoboiler'
 
 jobs:
-  download-zip:
+  build-theme-zip:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Prepare theme folder
+      - name: Build WordPress-ready theme ZIP (single non-nested zip)
         run: |
-          THEME_FOLDER="${{ github.event.inputs.artifact_name }}"
-          rm -rf "$THEME_FOLDER"
-          mkdir "$THEME_FOLDER"
-          
-          # Copy all repo files except .git, .github, workflow yaml files into theme folder
+          THEME="${{ github.event.inputs.artifact_name }}"
+          # Clean up any previous work
+          rm -rf "$THEME" "$THEME.zip"
+          mkdir "$THEME"
           shopt -s dotglob
           for item in *; do
-            if [[ "$item" != "$THEME_FOLDER" && "$item" != ".git" && "$item" != ".github" && "$item" != "*.yml" && "$item" != "*.yaml" ]]; then
-              cp -r "$item" "$THEME_FOLDER/"
+            if [[ "$item" != "$THEME" && "$item" != ".git" && "$item" != ".github" && "$item" != "*.yml" && "$item" != "*.yaml" ]]; then
+              cp -r "$item" "$THEME/"
             fi
           done
+          zip -r "$THEME.zip" "$THEME"
 
-      - name: Create WordPress-ready theme ZIP
-        run: |
-          THEME_FOLDER="${{ github.event.inputs.artifact_name }}"
-          zip -r "${THEME_FOLDER}.zip" "$THEME_FOLDER"
-
-      - name: Upload artifact
-        id: upload
+      - name: Upload zip artifact (WordPress install-ready)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.artifact_name }}
+          name: ${{ github.event.inputs.artifact_name }}-wordpress-theme-zip
           path: ${{ github.event.inputs.artifact_name }}.zip
           compression-level: 0
 
@@ -52,7 +45,7 @@ jobs:
           sleep 5
           artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
-            | jq -r --arg name "${{ github.event.inputs.artifact_name }}" '.artifacts[] | select(.name == $name) | .id')
+            | jq -r --arg name "${{ github.event.inputs.artifact_name }}-wordpress-theme-zip" '.artifacts[] | select(.name == $name) | .id')
           echo "artifact_zip_url=https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" >> $GITHUB_OUTPUT
 
       - name: Call N8N resume URL
