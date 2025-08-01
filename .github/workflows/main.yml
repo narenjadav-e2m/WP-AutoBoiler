@@ -7,7 +7,7 @@ on:
         description: 'N8N resume URL'
         required: true
       artifact_name:
-        description: 'Name of the artifact'
+        description: 'Name of the artifact (theme folder name)'
         required: true
         default: 'wp-autoboiler'
 
@@ -25,7 +25,7 @@ jobs:
           rm -rf "$THEME_FOLDER"
           mkdir "$THEME_FOLDER"
           
-          # Copy all repo files except .git, .github and workflow YAMLs into the theme folder
+          # Copy all repo files except .git, .github, workflow yaml files into theme folder
           shopt -s dotglob
           for item in *; do
             if [[ "$item" != "$THEME_FOLDER" && "$item" != ".git" && "$item" != ".github" && "$item" != "*.yml" && "$item" != "*.yaml" ]]; then
@@ -52,7 +52,7 @@ jobs:
           sleep 5
           artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
-            | jq '.artifacts.id')
+            | jq -r --arg name "${{ github.event.inputs.artifact_name }}" '.artifacts[] | select(.name == $name) | .id')
           echo "artifact_zip_url=https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" >> $GITHUB_OUTPUT
 
       - name: Call N8N resume URL
