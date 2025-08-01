@@ -20,14 +20,14 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Zip entire repo
-        run: zip -r repo.zip . -x "*.git*"
+        run: zip -r ${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
 
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.artifact_name }}
-          path: repo.zip
+          path: ${{ github.event.inputs.artifact_name }}.zip
 
       - name: Get artifact ID + output download URL
         id: set-output
