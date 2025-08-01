@@ -6,6 +6,10 @@ on:
       resumeUrl:
         description: 'N8N resume URL'
         required: true
+      artifact_name:
+        description: 'Name of the artifact'
+        required: true
+        default: 'wp-autoboiler'
 
 jobs:
   download-zip:
@@ -22,7 +26,7 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: repo-package
+          name: ${{ github.event.inputs.artifact_name }}
           path: repo.zip
 
       - name: Get artifact ID + output download URL
