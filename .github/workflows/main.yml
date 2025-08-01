@@ -23,7 +23,11 @@ jobs:
         run: |
           mkdir ${{ github.event.inputs.artifact_name }}
           shopt -s dotglob
-          cp -r * ${{ github.event.inputs.artifact_name }}
+          for item in *; do
+            if [ "$item" != "${{ github.event.inputs.artifact_name }}" ]; then
+              cp -r "$item" "${{ github.event.inputs.artifact_name }}/"
+            fi
+          done
 
       - name: Zip entire repo inside root folder
         run: zip -r ${{ github.event.inputs.artifact_name }}.zip ${{ github.event.inputs.artifact_name }}
