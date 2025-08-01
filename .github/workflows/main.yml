@@ -19,32 +19,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create WordPress theme ZIP
+      - name: Create WordPress-ready theme ZIP
         run: |
-          # Create theme directory
-          mkdir -p ${{ github.event.inputs.artifact_name }}
-          
-          # Copy all files except the theme directory itself
-          shopt -s dotglob
-          for item in *; do
-            if [ "$item" != "${{ github.event.inputs.artifact_name }}" ]; then
-              cp -r "$item" "${{ github.event.inputs.artifact_name }}/"
-            fi
-          done
-          
-          # Remove GitHub-specific files
-          rm -rf ${{ github.event.inputs.artifact_name }}/.git*
-          rm -rf ${{ github.event.inputs.artifact_name }}/.github
-          
-          # Create ZIP with the theme folder
-          zip -r theme-package.zip ${{ github.event.inputs.artifact_name }}
+          # Zip all files in the current directory (theme root)
+          zip -r ${{ github.event.inputs.artifact_name }}.zip . \
+            -x "*.git*" \
+            -x ".github/*" \
+            -x "*.yml" \
+            -x "*.md" \
+            -x ".gitignore"
 
-      - name: Upload ZIP as release asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./theme-package.zip
-          asset_name: ${{ github.event.inputs.artifact_name }}.zip
-          asset_content_type: application/zip
+          name: ${{ github.event.inputs.artifact_name }}
+          path: ${{ github.event.inputs.artifact_name }}.zip
+          compression-level: 0
+
+      - name: Get artifact ID + output download URL
+        id: set-output
+        run: |
+          # Wait a moment for the artifact to be registered
+          sleep 5
+          
+          artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
+            | jq '.artifacts[0].id')
+
+          echo "artifact_zip_url=https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" >> $GITHUB_OUTPUT
+
+      - name: Call N8N resume URL
+        run: |
+          curl -X POST "${{ inputs.resumeUrl }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\": \"Build completed\", \"artifact_zip_url\": \"${{ steps.set-output.outputs.artifact_zip_url }}\"}"
