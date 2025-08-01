@@ -40,7 +40,7 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: build
+          name: ${{ github.event.inputs.artifact_name }}
           path: ${{ github.event.inputs.artifact_name }}.zip
           compression-level: 0  # Disable compression to avoid double-zipping
 
