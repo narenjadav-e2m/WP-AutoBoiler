@@ -19,42 +19,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create WordPress-ready theme ZIP
+      - name: Create WordPress theme ZIP
         run: |
-          # Create a temporary directory
-          mkdir -p /tmp/theme-build
+          # Create theme directory
+          mkdir -p ${{ github.event.inputs.artifact_name }}
           
-          # Copy all files to the temporary directory
+          # Copy all files except the theme directory itself
           shopt -s dotglob
-          cp -r * /tmp/theme-build/ 2>/dev/null || true
+          for item in *; do
+            if [ "$item" != "${{ github.event.inputs.artifact_name }}" ]; then
+              cp -r "$item" "${{ github.event.inputs.artifact_name }}/"
+            fi
+          done
           
-          # Remove any .git directories and GitHub-specific files
-          find /tmp/theme-build -name ".git*" -exec rm -rf {} + 2>/dev/null || true
-          find /tmp/theme-build -name ".github" -exec rm -rf {} + 2>/dev/null || true
+          # Remove GitHub-specific files
+          rm -rf ${{ github.event.inputs.artifact_name }}/.git*
+          rm -rf ${{ github.event.inputs.artifact_name }}/.github
           
-          # Create the ZIP file with files at the root level
-          cd /tmp/theme-build
-          zip -r ${{ github.workspace }}/${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
+          # Create ZIP with the theme folder
+          zip -r theme-package.zip ${{ github.event.inputs.artifact_name }}
 
-      - name: Upload artifact (uncompressed)
-        id: upload
-        uses: actions/upload-artifact@v4
+      - name: Upload ZIP as release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ github.event.inputs.artifact_name }}
-          path: ${{ github.event.inputs.artifact_name }}.zip
-          compression-level: 0  # Disable compression to avoid double-zipping
-
-      - name: Get artifact ID + output download URL
-        id: set-output
-        run: |
-          artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
-            | jq '.artifacts[0].id')
-
-          echo "artifact_zip_url=https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" >> $GITHUB_OUTPUT
-
-      - name: Call N8N resume URL
-        run: |
-          curl -X POST "${{ inputs.resumeUrl }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"message\": \"Build completed\", \"artifact_zip_url\": \"${{ steps.set-output.outputs.artifact_zip_url }}\"}"
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./theme-package.zip
+          asset_name: ${{ github.event.inputs.artifact_name }}.zip
+          asset_content_type: application/zip
