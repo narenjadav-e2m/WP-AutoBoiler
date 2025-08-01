@@ -18,18 +18,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+        
       - name: Prepare folder for zipping
         run: |
-          mkdir ${{ github.event.inputs.artifact_name }}
+          mkdir temp_build
+          mkdir temp_build/${{ github.event.inputs.artifact_name }}
           shopt -s dotglob
           for item in *; do
-            if [ "$item" != "${{ github.event.inputs.artifact_name }}" ]; then
-              cp -r "$item" "${{ github.event.inputs.artifact_name }}/"
+            if [ "$item" != "temp_build" ]; then
+              cp -r "$item" "temp_build/${{ github.event.inputs.artifact_name }}/"
             fi
           done
 
       - name: Zip theme folder (correct structure for WP)
+        working-directory: temp_build
         run: zip -r ${{ github.event.inputs.artifact_name }}.zip ${{ github.event.inputs.artifact_name }}
 
       - name: Upload artifact
@@ -37,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build
-          path: ${{ github.event.inputs.artifact_name }}.zip
+          path: temp_build/${{ github.event.inputs.artifact_name }}.zip
 
       # - name: Zip entire repo
       #   run: zip -r ${{ github.event.inputs.artifact_name }}.zip . -x "*.git*"
