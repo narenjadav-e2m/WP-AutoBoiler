@@ -17,8 +17,6 @@ defined('THEME_URL') || define('THEME_URL', get_stylesheet_directory_uri());
 
 defined('ASSETS_URL') || define('ASSETS_URL', get_stylesheet_directory_uri() . '/assets/');
 
-if (class_exists('Redux')) require_once THEME_DIR . '/inc/theme-options.php';
-
 require_once THEME_DIR . '/inc/setup.php';
 require_once THEME_DIR . '/inc/login-customizer.php';
 require_once THEME_DIR . '/inc/post-types.php';
